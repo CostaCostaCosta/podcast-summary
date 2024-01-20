@@ -2,7 +2,11 @@ from transformers import BertTokenizer, BertModel
 import torch
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import nltk
 from nltk.tokenize import sent_tokenize
+import spacy
+
+# nltk.download('punkt')
 
 # Load pre-trained model tokenizer (vocabulary)
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -53,8 +57,55 @@ def segment_text(text, similarity_threshold=0.5):
     segments.append(' '.join(current_segment))
     return segments
 
-# Example usage
-text = "Your text goes here."
+# # Example usage
+# text = "Your text goes here."
 
-segments = segment_text(text)
-print(segments)
+# segments = segment_text(text)
+# print(segments)
+
+def segment_json(self, json_data):
+        segments = []
+        current_segment = []
+        current_topic = None
+
+        for chunk in json_data["chunks"]:
+            text = chunk["text"]
+            detected_topic = detect_topics_spacy(text)
+
+            if detected_topic != current_topic:
+                if current_segment:
+                    segments.append({"topic": current_topic, "text": " ".join(current_segment)})
+                    current_segment = []
+                current_topic = detected_topic
+
+            current_segment.append(text)
+
+        # Add the last segment
+        if current_segment:
+            segments.append({"topic": current_topic, "text": " ".join(current_segment)})
+
+        return segments
+
+def detect_topics_spacy(text):
+        print('detecting topics using spacy')
+        # Load BERT
+
+        # Process the text with spaCy
+        doc = self.nlp(text)
+        
+        # Extract entities and filter for proper nouns (likely to be player names)
+        # You can also customize this to look for specific entity types like PERSON
+        topics = set()
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":
+                topics.add(ent.text)
+        
+        # For simplicity, return the first identified topic
+        # In a more complex scenario, you might need a more sophisticated approach
+        return next(iter(topics), None)
+
+def detect_topics_bert(text):
+     return text
+
+def detect_topics_bert(text):
+     return text
