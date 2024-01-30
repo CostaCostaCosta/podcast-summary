@@ -21,12 +21,16 @@ class AudioPreprocess:
         if self.load_transcription():
             print('Loaded pre-saved transcription')
         else:
-            self.transcription = transcribe(self.audio_file)
+            print('Transcribing Audio')
+            self.transcription = transcribe(self.audio_file)  # Ensure transcribe function handles this correctly
+            print('Saving Audio transcription')
+            self.save_transcription(self.transcription, self.audio_file)        
         return self.transcription
     
     def save_transcription(self, transcription_text, audio_file):
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        file_name = f"{audio_file}_{timestamp}.json"
+        base_name = os.path.splitext(os.path.basename(audio_file))[0]  # Extract base name without extension
+        file_name = f"{base_name}_{timestamp}.json"
         file_path = os.path.join("data", "transcripts", file_name)
     
         with open(file_path, 'w') as file:
@@ -34,14 +38,17 @@ class AudioPreprocess:
     
     def load_transcription(self):
         transcript_directory = os.path.join("data", "transcripts")
+        audio_file_base_name = os.path.splitext(os.path.basename(self.audio_file))[0]  # Extract base name without extension
         for filename in os.listdir(transcript_directory):
-            if filename.startswith(self.audio_file):
+            base_name = filename.split('_')[0]  # Assuming the file name format is consistent
+            if base_name == audio_file_base_name:
                 file_path = os.path.join(transcript_directory, filename)
                 with open(file_path, 'r') as file:
                     transcription_text = json.load(file)
                 self.transcription = transcription_text
                 return True
         return False
+
 
 class Segmenter:
     def __init__(self):
@@ -74,7 +81,7 @@ class Segmenter:
         kmeans.fit(embeddings)
         return kmeans.labels_
 
-    def segment_json(self, json_data, n_clusters):
+    def segment_json_by_cluster(self, json_data, n_clusters):
         texts = [chunk["text"] for chunk in json_data["chunks"]]
         clusters = self.cluster_texts(texts, n_clusters)
 
@@ -85,42 +92,38 @@ class Segmenter:
             segmented_data[cluster_id].append(json_data["chunks"][i]["text"])
 
         return segmented_data
+    
+    def segment_json_by_tokens(self, json_data, n_tokens):
+        segments = []
+        current_segment = []
+        current_token_count = 0
+
+        for chunk in json_data["chunks"]:
+            text = chunk["text"]
+            tokenized_text = self.tokenizer.tokenize(text)
+            token_count = len(tokenized_text)
+            current_token_count += token_count
+
+            if current_token_count <= n_tokens:
+                current_segment.append(text)
+            else:
+                segments.append(" ".join(current_segment))
+                current_segment = [text]
+                current_token_count = token_count
+
+        # Add the last segment if it's not empty
+        if current_segment:
+            segments.append(" ".join(current_segment))
+
+        return segments
+
 
 # Example usage of the classes
 audio_transcriber = AudioPreprocess("./data/audio/shorter.mp3")
 json_transcription = audio_transcriber.perform_transcription()
 segmenter = Segmenter()
-n_clusters = 5  # Define the number of topics you expect in the transcription #USE NER FOR THIS?
-segmented_data = segmenter.segment_json(json_transcription, n_clusters)
+n_clusters = 5 # Define the number of topics you expect in the transcription #USE NER FOR THIS?
+n_tokens = 2048  #set this to the context window size - prompt token length
+segmented_data = segmenter.segment_json_by_tokens(json_transcription, n_tokens=2048)
 ipdb.set_trace()
 
-# segmented_data now contains the text grouped by inferred topics
-
-    
-# class Segmenter:
-#     def segment(self, text):
-#         self.segments = segment.segment_text(self.transcription)
-#         pass
-
-#     def segment_json(self, json_data):
-#         self.sements = segment.segment_json(self.transcription)
-
-# # Example usage
-# json_transcription = {
-#     "chunks": [
-#         {"timestamp": [0.0, 21.72], "text": "Hello and welcome..."},
-#         # ... more chunks ...
-#     ]
-# }
-
-# segmenter = Segmenter()
-# segments = segmenter.segment_json(json_transcription)
-# print(segments)
-
-
-# # Example usage of the classes
-# audio_transcriber = AudioPreprocess("path/to/audio/file.mp3")
-# audio_transcriber.perform_transcription()
-# audio_transcriber.segment_transcription()
-
-# segments = audio_transcriber.get_segments()
