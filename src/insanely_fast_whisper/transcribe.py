@@ -18,12 +18,4 @@ def transcribe(file_name):
         return_timestamps=True,
     )
 
-    # outputs = pipe(
-    #     "<FILE_NAME>",
-    #     chunk_length_s=30,
-    #     batch_size=24,
-    #     return_timestamps=True,
-    # )
-    
-    #todo: whisper returns both text as json with timestamps and the raw text. definitely do not need to use both, should try both separately.
     return outputs
