@@ -1,7 +1,6 @@
 import requests
 import json
 import os
-import ipdb
 
 
 def summarize_transcription(api_url, api_key, transcription):
