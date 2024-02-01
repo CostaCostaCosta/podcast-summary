@@ -11,6 +11,7 @@ import ipdb
 
 from insanely_fast_whisper.transcribe import transcribe
 
+
 class AudioPreprocess:
     def __init__(self, audio_file):
         self.audio_file = audio_file
@@ -19,31 +20,37 @@ class AudioPreprocess:
 
     def perform_transcription(self):
         if self.load_transcription():
-            print('Loaded pre-saved transcription')
+            print("Loaded pre-saved transcription")
         else:
-            print('Transcribing Audio')
-            self.transcription = transcribe(self.audio_file)  # Ensure transcribe function handles this correctly
-            print('Saving Audio transcription')
-            self.save_transcription(self.transcription, self.audio_file)        
+            print("Transcribing Audio")
+            self.transcription = transcribe(self.audio_file)
+            print("Saving Audio transcription")
+            self.save_transcription(self.transcription, self.audio_file)
         return self.transcription
-    
+
     def save_transcription(self, transcription_text, audio_file):
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        base_name = os.path.splitext(os.path.basename(audio_file))[0]  # Extract base name without extension
+        base_name = os.path.splitext(os.path.basename(audio_file))[
+            0
+        ]  # Extract base name without extension
         file_name = f"{base_name}_{timestamp}.json"
         file_path = os.path.join("data", "transcripts", file_name)
-    
-        with open(file_path, 'w') as file:
+
+        with open(file_path, "w") as file:
             json.dump(transcription_text, file)
-    
+
     def load_transcription(self):
         transcript_directory = os.path.join("data", "transcripts")
-        audio_file_base_name = os.path.splitext(os.path.basename(self.audio_file))[0]  # Extract base name without extension
+        audio_file_base_name = os.path.splitext(os.path.basename(self.audio_file))[
+            0
+        ]  # Extract base name without extension
         for filename in os.listdir(transcript_directory):
-            base_name = filename.split('_')[0]  # Assuming the file name format is consistent
+            base_name = filename.split("_")[
+                0
+            ]  # Assuming the file name format is consistent
             if base_name == audio_file_base_name:
                 file_path = os.path.join(transcript_directory, filename)
-                with open(file_path, 'r') as file:
+                with open(file_path, "r") as file:
                     transcription_text = json.load(file)
                 self.transcription = transcription_text
                 return True
@@ -53,8 +60,10 @@ class AudioPreprocess:
 class Segmenter:
     def __init__(self):
         # Initialize the BERT tokenizer and model
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        self.model = BertModel.from_pretrained('bert-base-uncased', output_hidden_states=True)
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        self.model = BertModel.from_pretrained(
+            "bert-base-uncased", output_hidden_states=True
+        )
         self.model.eval()  # Put model in evaluation mode
 
     def generate_embeddings(self, text):
@@ -92,7 +101,7 @@ class Segmenter:
             segmented_data[cluster_id].append(json_data["chunks"][i]["text"])
 
         return segmented_data
-    
+
     def segment_json_by_tokens(self, json_data, n_tokens):
         segments = []
         current_segment = []
@@ -123,8 +132,9 @@ audio_transcriber = AudioPreprocess("./data/audio/shorter.mp3")
 # audio_transcriber = AudioPreprocess("./data/audio/RotoGraphs-Audio-01-15-2024.mp3")
 json_transcription = audio_transcriber.perform_transcription()
 segmenter = Segmenter()
-n_clusters = 5 # Define the number of topics you expect in the transcription #USE NER FOR THIS?
-n_tokens = 2048  #set this to the context window size - prompt token length
+n_clusters = (
+    5  # Define the number of topics you expect in the transcription #USE NER FOR THIS?
+)
+n_tokens = 2048  # set this to the context window size - prompt token length
 segmented_data = segmenter.segment_json_by_tokens(json_transcription, n_tokens=2048)
 ipdb.set_trace()
-

@@ -96,13 +96,15 @@ def main():
         model=args.model_name,
         torch_dtype=torch.float16,
         device="mps" if args.device_id == "mps" else f"cuda:{args.device_id}",
-        model_kwargs={"attn_implementation": "flash_attention_2"} if args.flash else {"attn_implementation": "sdpa"},
+        model_kwargs={"attn_implementation": "flash_attention_2"}
+        if args.flash
+        else {"attn_implementation": "sdpa"},
     )
 
     if args.device_id == "mps":
         torch.mps.empty_cache()
     # elif not args.flash:
-        # pipe.model = pipe.model.to_bettertransformer()
+    # pipe.model = pipe.model.to_bettertransformer()
 
     ts = "word" if args.timestamp == "word" else True
 
