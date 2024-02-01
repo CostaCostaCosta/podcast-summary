@@ -119,8 +119,8 @@ class Segmenter:
 
 
 # Example usage of the classes
-# audio_transcriber = AudioPreprocess("./data/audio/shorter.mp3")
-audio_transcriber = AudioPreprocess("./data/audio/RotoGraphs-Audio-01-15-2024.mp3")
+audio_transcriber = AudioPreprocess("./data/audio/shorter.mp3")
+# audio_transcriber = AudioPreprocess("./data/audio/RotoGraphs-Audio-01-15-2024.mp3")
 json_transcription = audio_transcriber.perform_transcription()
 segmenter = Segmenter()
 n_clusters = 5 # Define the number of topics you expect in the transcription #USE NER FOR THIS?
