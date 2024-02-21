@@ -1,3 +1,4 @@
 *.mp3
 *.json
 *.pyc
+*.env

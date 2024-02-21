@@ -1,9 +1,11 @@
-import requests
 import json
 import os
+from dotenv import load_dotenv
+import requests
+import ipdb
 
 
-def summarize_transcription(api_url, api_key, transcription):
+def summarize_transcription(api_url, transcription):
     """
     Calls an OpenAI-like API to create a condensed summary of a given transcription.
 
@@ -13,33 +15,37 @@ def summarize_transcription(api_url, api_key, transcription):
     transcription (str): The transcription text to be summarized.
 
     Returns:
-    str: The summary of the transcription.
+    dict: The response from the API.
     """
+
+    # # Set the headers with the API key
+    headers = {"Content-Type": "application/json"}
+    history = []
 
     # Define the prompt
     prompt = f"Provide a structured analysis and summary of the following baseball podcast transcription, focusing on the key players discussed:\n\n{transcription}"
+    payload = prompt + transcription
 
     # Prepare the request payload
-    payload = {
-        "prompt": prompt,
-        "max_tokens": 200,  # Adjust the token limit based on your needs
-    }
+    # payload = {
+    #     # "prompt": prompt + transcription,
+    #     "max_tokens": 500,  # Adjust the token limit based on your needs
+    # }
 
-    # Set the headers with the API key
-    headers = {"Authorization": f"Bearer {api_key}"}
+    history.append({"role": "user", "content": payload})
+    data = {"mode": "chat", "character": "Example", "messages": history}
 
     # Make the API request
-    response = requests.post(api_url, json=payload, headers=headers)
-
+    response = requests.post(api_url, headers=headers, json=data, verify=False)
     # Check if the request was successful
     if response.status_code == 200:
-        return response.json().get("choices", [{}])[0].get("text", "").strip()
+        return response.json()
     else:
-        return f"Error: {response.text}"
+        return {"Error": response.text}
 
 
 # Example usage
-api_url = "http://127.0.0.1:5000"  # Replace with the actual API URL
+api_url = "http://127.0.0.1:5000/v1/chat/completions"  # Replace with the actual API URL
 api_key = ""  # Replace with your actual API key
 
 # specify the file path
@@ -53,6 +59,22 @@ with open(file_path, "r") as file:
 transcription_excerpt = data["text"]
 # transcription_excerpt = "Shortened version of the transcription..."  # Replace with the actual transcription excerpt
 
-
-summary = summarize_transcription(api_url, api_key, transcription_excerpt)
+summary = summarize_transcription(api_url, transcription_excerpt)
 print(summary)
+
+## SAMPLE CODE FROM https://github.com/oobabooga/text-generation-webui/wiki/12-%E2%80%90-OpenAI-API
+# url = "http://127.0.0.1:5000/v1/chat/completions"
+
+# headers = {"Content-Type": "application/json"}
+
+# history = []
+
+# while True:
+#     user_message = input("> ")
+#     history.append({"role": "user", "content": user_message})
+#     data = {"mode": "chat", "character": "Example", "messages": history}
+
+#     response = requests.post(url, headers=headers, json=data, verify=False)
+#     assistant_message = response.json()["choices"][0]["message"]["content"]
+#     history.append({"role": "assistant", "content": assistant_message})
+#     print(assistant_message)

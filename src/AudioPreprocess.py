@@ -27,6 +27,7 @@ class AudioPreprocess:
             print("Saving Audio transcription")
             self.save_transcription(self.transcription, self.audio_file)
         return self.transcription
+    
 
     def save_transcription(self, transcription_text, audio_file):
         timestamp = time.strftime("%Y%m%d-%H%M%S")
