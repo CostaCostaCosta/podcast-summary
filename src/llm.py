@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 import requests
 import ipdb
 
+## SAMPLE CODE FROM https://github.com/oobabooga/text-generation-webui/wiki/12-%E2%80%90-OpenAI-API
+# url = "http://127.0.0.1:5000/v1/chat/completions"
+
 
 def summarize_transcription(api_url, transcription):
     """
@@ -33,7 +36,7 @@ def summarize_transcription(api_url, transcription):
     # }
 
     history.append({"role": "user", "content": payload})
-    data = {"mode": "chat", "character": "Example", "messages": history}
+    data = {"mode": "chat", "character": "AI", "messages": history}
 
     # Make the API request
     response = requests.post(api_url, headers=headers, json=data, verify=False)
@@ -61,20 +64,3 @@ transcription_excerpt = data["text"]
 
 summary = summarize_transcription(api_url, transcription_excerpt)
 print(summary)
-
-## SAMPLE CODE FROM https://github.com/oobabooga/text-generation-webui/wiki/12-%E2%80%90-OpenAI-API
-# url = "http://127.0.0.1:5000/v1/chat/completions"
-
-# headers = {"Content-Type": "application/json"}
-
-# history = []
-
-# while True:
-#     user_message = input("> ")
-#     history.append({"role": "user", "content": user_message})
-#     data = {"mode": "chat", "character": "Example", "messages": history}
-
-#     response = requests.post(url, headers=headers, json=data, verify=False)
-#     assistant_message = response.json()["choices"][0]["message"]["content"]
-#     history.append({"role": "assistant", "content": assistant_message})
-#     print(assistant_message)
