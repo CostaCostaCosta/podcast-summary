@@ -27,7 +27,6 @@ class AudioPreprocess:
             print("Saving Audio transcription")
             self.save_transcription(self.transcription, self.audio_file)
         return self.transcription
-    
 
     def save_transcription(self, transcription_text, audio_file):
         timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -138,4 +137,3 @@ n_clusters = (
 )
 n_tokens = 2048  # set this to the context window size - prompt token length
 segmented_data = segmenter.segment_json_by_tokens(json_transcription, n_tokens=2048)
-ipdb.set_trace()
