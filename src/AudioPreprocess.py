@@ -13,6 +13,10 @@ from insanely_fast_whisper.transcribe import transcribe
 
 
 class AudioPreprocess:
+    """
+    Class for handling audio preprocessing.
+    """
+
     def __init__(self, audio_file):
         self.audio_file = audio_file
         self.transcription = ""
@@ -58,16 +62,24 @@ class AudioPreprocess:
 
 
 class Segmenter:
+    """
+    Class for handling text segmentation and clustering.
+    """
+
     def __init__(self):
-        # Initialize the BERT tokenizer and model
+        """
+        Initialize with BERT tokenizer and model.
+        """
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         self.model = BertModel.from_pretrained(
             "bert-base-uncased", output_hidden_states=True
         )
-        self.model.eval()  # Put model in evaluation mode
+        self.model.eval()
 
     def generate_embeddings(self, text):
-        # Add special tokens
+        """
+        Generate embeddings for a text using BERT.
+        """
         marked_text = "[CLS] " + text + " [SEP]"
         tokenized_text = self.tokenizer.tokenize(marked_text)
         indexed_tokens = self.tokenizer.convert_tokens_to_ids(tokenized_text)
@@ -80,17 +92,22 @@ class Segmenter:
             outputs = self.model(tokens_tensor, segments_tensors)
             hidden_states = outputs[2]
 
-        # Use the average of the last four layers as the sentence embedding
         token_vecs = torch.stack(hidden_states[-4:]).mean(0).squeeze()
         return token_vecs.mean(dim=0).numpy()
 
     def cluster_texts(self, texts, n_clusters):
+        """
+        Cluster texts into n_clusters using KMeans.
+        """
         embeddings = np.array([self.generate_embeddings(text) for text in texts])
         kmeans = KMeans(n_clusters=n_clusters)
         kmeans.fit(embeddings)
         return kmeans.labels_
 
     def segment_json_by_cluster(self, json_data, n_clusters):
+        """
+        Segment json data by clustering.
+        """
         texts = [chunk["text"] for chunk in json_data["chunks"]]
         clusters = self.cluster_texts(texts, n_clusters)
 
@@ -103,6 +120,9 @@ class Segmenter:
         return segmented_data
 
     def segment_json_by_tokens(self, json_data, n_tokens):
+        """
+        Segment json data by number of tokens.
+        """
         segments = []
         current_segment = []
         current_token_count = 0
@@ -120,7 +140,6 @@ class Segmenter:
                 current_segment = [text]
                 current_token_count = token_count
 
-        # Add the last segment if it's not empty
         if current_segment:
             segments.append(" ".join(current_segment))
 
@@ -128,8 +147,8 @@ class Segmenter:
 
 
 # Example usage of the classes
-audio_transcriber = AudioPreprocess("./data/audio/shorter.mp3")
-# audio_transcriber = AudioPreprocess("./data/audio/RotoGraphs-Audio-01-15-2024.mp3")
+# audio_transcriber = AudioPreprocess("./data/audio/shorter.mp3")
+audio_transcriber = AudioPreprocess("./data/audio/RotoGraphs-Audio-01-15-2024.mp3")
 json_transcription = audio_transcriber.perform_transcription()
 segmenter = Segmenter()
 n_clusters = (
